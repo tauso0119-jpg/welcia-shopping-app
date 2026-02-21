@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss'
-const colors = require('tailwindcss/colors')
+import colors from 'tailwindcss/colors'
+import forms from '@tailwindcss/forms'
 
 const config: Config = {
   content: [
@@ -16,7 +17,7 @@ const config: Config = {
     },
   },
   plugins: [
-    require('@tailwindcss/forms'),
+    forms,
   ],
 }
 export default config
