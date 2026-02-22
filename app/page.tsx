@@ -108,7 +108,7 @@ export default function WelKatsuApp() {
           <div className="animate-in fade-in duration-500">
             <div className="flex justify-between items-center my-4">
               <h1 className="text-xl font-black">🛒 買い物リスト</h1>
-              <button onClick={finishShopping} className="bg-gray-800 text-white text-[10px] font-black px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition-all"><RotateCcw size={12} /> 完了/リセット</button>
+              <button onClick={finishShopping} className="bg-gray-800 text-white text-[10px] font-black px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition-all font-sans"><RotateCcw size={12} /> 完了/リセット</button>
             </div>
             <div className="space-y-3">
               {inventory.filter((i: any) => i.toBuy).sort((a: any, b: any) => Number(a.isPacked) - Number(b.isPacked)).map((item: any) => (
@@ -117,17 +117,17 @@ export default function WelKatsuApp() {
                     <button onClick={() => updateDoc(doc(db, "inventory", item.id), { isPacked: !item.isPacked })} className={`mt-1 transition-colors ${item.isPacked ? 'text-green-500' : 'text-gray-300'}`}><CheckCircle2 size={28} /></button>
                     <div className="flex-1">
                       <div className="flex justify-between items-start gap-2">
-                        <div className={`${item.isPacked ? 'line-through font-bold text-gray-400' : 'font-bold text-lg text-gray-800'}`}>{item.name}</div>
-                        <span className="shrink-0 text-[9px] font-black bg-gray-100 px-2 py-1 rounded-lg text-gray-500 flex items-center gap-1"><MapPin size={8}/>{(item.loc2 && item.loc2 !== "なし") ? `${item.loc} / ${item.loc2}` : item.loc}</span>
+                        <div className={`${item.isPacked ? 'line-through font-bold text-gray-400 font-sans' : 'font-bold text-lg text-gray-800 font-sans'}`}>{item.name}</div>
+                        <span className="shrink-0 text-[9px] font-black bg-gray-100 px-2 py-1 rounded-lg text-gray-500 flex items-center gap-1 font-sans"><MapPin size={8}/>{(item.loc2 && item.loc2 !== "なし") ? `${item.loc} / ${item.loc2}` : item.loc}</span>
                       </div>
-                      <div className="text-xs text-gray-400 font-medium mb-2">{item.realName}</div>
+                      <div className="text-xs text-gray-400 font-medium mb-2 font-sans">{item.realName}</div>
                       {!item.isPacked && (
                         <div className="flex items-center gap-2 mt-2">
                           <DebouncedInput label="個数" value={item.quantity} onChange={(val: any) => updateDoc(doc(db, "inventory", item.id), { quantity: Number(val) })} />
                           <DebouncedInput label="単価(税込)" value={item.price} onChange={(val: any) => updateDoc(doc(db, "inventory", item.id), { price: Number(val) })} />
                         </div>
                       )}
-                      <div className="text-right mt-2 text-[#ff4b4b] font-black italic text-sm">¥{(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString()}</div>
+                      <div className="text-right mt-2 text-[#ff4b4b] font-black italic text-sm font-sans">¥{(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
@@ -150,26 +150,35 @@ export default function WelKatsuApp() {
               )}
             </div>
             <div className="space-y-2">
-              {filteredStockList.map((item: any) => (
-                <div key={item.id} className={`bg-white p-4 rounded-xl shadow-sm border transition-all ${item.isChecking || item.toBuy ? 'border-[#ff4b4b]/30 ring-1 ring-[#ff4b4b]/10' : 'border-gray-100'}`}>
-                  <div className="flex items-center justify-between font-sans">
-                    <div>
-                      <div className="font-bold text-gray-700">{item.name}</div>
-                      <div className="text-[10px] text-gray-400 flex items-center gap-1 font-medium font-sans"><MapPin size={10}/>{(item.loc2 && item.loc2 !== "なし") ? `${item.loc} / ${item.loc2}` : item.loc}</div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => updateDoc(doc(db, "inventory", item.id), { isChecking: !item.isChecking, toBuy: !item.isChecking ? item.toBuy : false })} className={`px-5 py-2 rounded-full text-xs font-black transition-all ${item.isChecking || item.toBuy ? 'bg-[#ff4b4b] text-white shadow-md' : 'bg-gray-50 text-gray-400'} font-sans`}>買う</button>
-                      <button onClick={() => { setEditingItem(item); setForm({ name: item.name, realName: item.realName, cat: item.cat, loc: item.loc, loc2: item.loc2 || "なし" }); }} className="text-gray-300 font-sans"><Settings size={20} /></button>
+              {filteredStockList.map((item: any) => {
+                const isBuying = item.isChecking || item.toBuy;
+                return (
+                  <div key={item.id} className={`bg-white p-4 rounded-xl shadow-sm border transition-all ${isBuying ? 'border-[#ff4b4b]/30 ring-1 ring-[#ff4b4b]/10' : 'border-gray-100'}`}>
+                    <div className="flex items-center justify-between font-sans">
+                      <div>
+                        <div className={`font-bold font-sans ${isBuying ? 'text-gray-800' : 'text-gray-400'}`}>{item.name}</div>
+                        <div className="text-[10px] text-gray-400 flex items-center gap-1 font-medium font-sans"><MapPin size={10}/>{(item.loc2 && item.loc2 !== "なし") ? `${item.loc} / ${item.loc2}` : item.loc}</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => updateDoc(doc(db, "inventory", item.id), { isChecking: !item.isChecking, toBuy: !item.isChecking ? item.toBuy : false })} 
+                          className={`px-5 py-2 rounded-full text-xs font-black transition-all shadow-sm font-sans ${isBuying ? 'bg-[#ff4b4b] text-white' : 'bg-gray-100 text-gray-400 border border-gray-200'}`}
+                        >
+                          {isBuying ? '買う' : '在庫あり'}
+                        </button>
+                        <button onClick={() => { setEditingItem(item); setForm({ name: item.name, realName: item.realName, cat: item.cat, loc: item.loc, loc2: item.loc2 || "なし" }); }} className="text-gray-300 font-sans"><Settings size={20} /></button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
+        {/* ...（新規登録、設定、モーダル、ナビ部分は以前と同様のため変更なし）... */}
         {activeTab === 'add' && (
-          <div className="animate-in slide-in-from-bottom duration-300 pt-4"><h1 className="text-xl font-black my-4 font-sans">➕ 新規登録</h1><div className="space-y-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100"><input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="用品名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold font-sans" /><input value={form.realName} onChange={e => setForm({...form, realName: e.target.value})} placeholder="具体名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm font-sans" /><div className="grid grid-cols-2 gap-3 text-[10px] font-bold text-gray-400 font-sans"><div className="flex flex-col gap-1 font-sans">カテゴリ<select value={form.cat} onChange={e => setForm({...form, cat: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="flex flex-col gap-1 font-sans">場所1<select value={form.loc} onChange={e => setForm({...form, loc: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.filter(l => l !== "なし").map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="flex flex-col gap-1 text-[10px] font-bold text-gray-400 font-sans">場所2<select value={form.loc2} onChange={e => setForm({...form, loc2: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.map(l => <option key={l} value={l}>{l}</option>)}</select></div><button onClick={addItem} className="w-full bg-[#ff4b4b] text-white font-black py-4 rounded-2xl shadow-lg mt-4 active:scale-95 transition-all font-sans">登録する</button></div></div>
+          <div className="animate-in slide-in-from-bottom duration-300 pt-4"><h1 className="text-xl font-black my-4">➕ 新規登録</h1><div className="space-y-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100"><input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="用品名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold font-sans" /><input value={form.realName} onChange={e => setForm({...form, realName: e.target.value})} placeholder="具体名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm font-sans" /><div className="grid grid-cols-2 gap-3 text-[10px] font-bold text-gray-400 font-sans"><div className="flex flex-col gap-1 font-sans">カテゴリ<select value={form.cat} onChange={e => setForm({...form, cat: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="flex flex-col gap-1 font-sans">場所1<select value={form.loc} onChange={e => setForm({...form, loc: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.filter(l => l !== "なし").map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="flex flex-col gap-1 text-[10px] font-bold text-gray-400 font-sans">場所2<select value={form.loc2} onChange={e => setForm({...form, loc2: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.map(l => <option key={l} value={l}>{l}</option>)}</select></div><button onClick={addItem} className="w-full bg-[#ff4b4b] text-white font-black py-4 rounded-2xl shadow-lg mt-4 active:scale-95 transition-all font-sans">登録する</button></div></div>
         )}
 
         {activeTab === 'settings' && (
@@ -190,17 +199,18 @@ export default function WelKatsuApp() {
                   <input value={newLocInput} onChange={e => setNewLocInput(e.target.value)} placeholder="新しい名前..." className="flex-1 w-full bg-gray-100 border-none rounded-xl p-3 font-bold text-sm focus:ring-0 font-sans" />
                   <button onClick={() => { if(newLocInput){ const n = locations.filter(l => l !== "なし").concat(newLocInput); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); setNewLocInput(""); } }} className="w-20 shrink-0 bg-gray-800 text-white rounded-xl font-black text-xs active:scale-95 transition-all font-sans">追加</button>
                 </div>
-                <div className="flex flex-wrap gap-2">{locations.filter(l => l !== "なし").map(l => <span key={l} className="bg-gray-50 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{l} <X size={12} className="text-gray-400" onClick={() => { if(confirm("消す？")){ const n = locations.filter(x => x !== l && x !== "なし"); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); } }} /></span>)}</div>
+                <div className="flex flex-wrap gap-2">{locations.filter(l => l !== "なし").map(l => <span key={l} className="bg-gray-50 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{l} <X size={12} className="text-gray-300" onClick={() => { if(confirm("消す？")){ const n = locations.filter(x => x !== l && x !== "なし"); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); } }} /></span>)}</div>
               </div>
             </div>
           </div>
         )}
       </main>
 
+      {/* --- モーダル・ナビ（修正済み） --- */}
       {isLocModalOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-md animate-in fade-in duration-300 flex flex-col justify-end">
-          <div className="bg-white rounded-t-[40px] max-h-[85vh] overflow-y-auto p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl">
-            <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-black font-sans text-sans">場所で絞り込む</h2><button onClick={() => setIsLocModalOpen(false)} className="bg-gray-100 p-2 rounded-full font-sans"><X size={20}/></button></div>
+        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-md flex flex-col justify-end">
+          <div className="bg-white rounded-t-[40px] max-h-[85vh] overflow-y-auto p-8 shadow-2xl">
+            <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-black font-sans">場所で絞り込む</h2><button onClick={() => setIsLocModalOpen(false)} className="bg-gray-100 p-2 rounded-full"><X size={20}/></button></div>
             <div className="grid grid-cols-1 gap-3 pb-10">{["すべて", ...locations.filter(l => l !== "なし")].map(loc => (
               <button key={loc} onClick={() => { setSelectedLoc(loc); setIsLocModalOpen(false); }} className={`w-full text-left p-5 rounded-2xl font-black transition-all font-sans ${selectedLoc === loc ? 'bg-[#ff4b4b] text-white shadow-lg scale-105' : 'bg-gray-50 text-gray-700 active:bg-gray-100'}`}>{loc}</button>
             ))}</div>
