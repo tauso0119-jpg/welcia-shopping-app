@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Home, Plus, CheckCircle2, Trash2, Coins, Tag, MapPin, Settings, X, Edit2, RotateCcw, Send, ChevronDown } from 'lucide-center';
+import { ShoppingCart, Home, Plus, CheckCircle2, Trash2, Coins, Tag, MapPin, Settings, X, Edit2, RotateCcw, Send, ChevronDown } from 'lucide-react';
 import { db } from './firebase'; 
 import { collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc, query, orderBy, setDoc, writeBatch } from 'firebase/firestore';
 
+// --- 入力ラグ解消コンポーネント ---
 const DebouncedInput = ({ value, onChange, label, type = "number" }: any) => {
   const [innerValue, setInnerValue] = useState(value);
   useEffect(() => { setInnerValue(value); }, [value]);
@@ -58,14 +59,14 @@ export default function WelKatsuApp() {
       batch.update(doc(db, "inventory", i.id), { 
         toBuy: false, 
         isPacked: false, 
-        isChecking: true // 全品赤ボタンへ
+        isChecking: true 
       });
     });
     await batch.commit();
     setActiveTab('stock');
   };
 
-  // ✅ 【確定】チェック中のものを買い物リストへ反映させる（在庫確認からは消さない！）
+  // ✅ 【確定】チェック中のものを買い物リストへ反映させる
   const confirmToBuyList = async () => {
     const batch = writeBatch(db);
     inventory.forEach((i: any) => {
@@ -91,8 +92,6 @@ export default function WelKatsuApp() {
     setEditingItem(null);
   };
 
-  // 🏠 【在庫確認タブ】
-  // toBuyに関係なく、マスター全品を表示し続ける！
   const filteredStockList = inventory
     .filter((i: any) => selectedLoc === "すべて" || i.loc === selectedLoc || i.loc2 === selectedLoc)
     .sort((a, b) => Number(b.isChecking) - Number(a.isChecking));
@@ -185,7 +184,6 @@ export default function WelKatsuApp() {
           </div>
         )}
 
-        {/* ...（新規登録、設定、モーダル、ナビ部分は以前と同様）... */}
         {activeTab === 'add' && (
           <div className="animate-in slide-in-from-bottom duration-300 pt-4"><h1 className="text-xl font-black my-4 font-sans">➕ 新規登録</h1><div className="space-y-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 font-sans"><input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="用品名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold font-sans" /><input value={form.realName} onChange={e => setForm({...form, realName: e.target.value})} placeholder="具体名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm font-sans" /><div className="grid grid-cols-2 gap-3 text-[10px] font-bold text-gray-400 font-sans"><div className="flex flex-col gap-1 font-sans">カテゴリ<select value={form.cat} onChange={e => setForm({...form, cat: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="flex flex-col gap-1 font-sans">場所1<select value={form.loc} onChange={e => setForm({...form, loc: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.filter(l => l !== "なし").map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="flex flex-col gap-1 text-[10px] font-bold text-gray-400 font-sans">場所2<select value={form.loc2} onChange={e => setForm({...form, loc2: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.map(l => <option key={l} value={l}>{l}</option>)}</select></div><button onClick={addItem} className="w-full bg-[#ff4b4b] text-white font-black py-4 rounded-2xl shadow-lg mt-4 active:scale-95 transition-all font-sans">登録</button></div></div>
         )}
