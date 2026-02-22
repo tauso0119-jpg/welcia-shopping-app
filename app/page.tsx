@@ -20,14 +20,13 @@ const DebouncedInput = ({ value, onChange, label, type = "number" }: any) => {
 export default function WelKatsuApp() {
   const [activeTab, setActiveTab] = useState('shop');
   const [points, setPoints] = useState(0);
-  const [inventory, setInventory] = useState([]);
+  const [inventory, setInventory] = useState<any[]>([]);
   const [categories, setCategories] = useState(["キッチン", "お風呂", "洗面所", "トイレ"]);
   const [locations, setLocations] = useState(["パントリー", "廊下収納", "洗面台下", "なし"]);
   const [selectedLoc, setSelectedLoc] = useState("すべて");
   const [isLocModalOpen, setIsLocModalOpen] = useState(false);
   const [form, setForm] = useState({ name: "", realName: "", cat: "キッチン", loc: "パントリー", loc2: "なし" });
   const [editingItem, setEditingItem] = useState<any>(null);
-
   const [newCatInput, setNewCatInput] = useState("");
   const [newLocInput, setNewLocInput] = useState("");
 
@@ -86,7 +85,6 @@ export default function WelKatsuApp() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24 font-sans text-slate-800 tracking-tight">
-      
       {activeTab === 'shop' && (
         <div className="sticky top-0 z-50 bg-[#f8f9fa]/80 backdrop-blur-md px-4 py-3 border-b border-gray-200">
           <div className={`rounded-2xl p-4 shadow-lg text-white transition-all duration-500 ${remaining < 0 ? 'bg-orange-600' : 'bg-gradient-to-br from-[#ff4b4b] to-[#ff7676]'}`}>
@@ -184,7 +182,7 @@ export default function WelKatsuApp() {
                   <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} placeholder="新しい名前..." className="flex-1 w-full bg-gray-100 border-none rounded-xl p-3 font-bold text-sm focus:ring-0 font-sans" />
                   <button onClick={() => { if(newCatInput){ const n = [...categories, newCatInput]; setCategories(n); setDoc(doc(db, "settings", "masters"), { categories: n, locations: locations.filter(l => l !== "なし") }, { merge: true }); setNewCatInput(""); } }} className="w-20 shrink-0 bg-gray-800 text-white rounded-xl font-black text-xs active:scale-95 transition-all font-sans">追加</button>
                 </div>
-                <div className="flex flex-wrap gap-2">{categories.map(c => <span key={c} className="bg-gray-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{c} <X size={12} className="text-gray-300" onClick={() => { if(confirm("消す？")){ const n = categories.filter(x => x !== c); setCategories(n); setDoc(doc(db, "settings", "masters"), { categories: n, locations: locations.filter(l => l !== "なし") }, { merge: true }); } }} /></span>)}</div>
+                <div className="flex flex-wrap gap-2">{categories.map(c => <span key={c} className="bg-gray-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{c} <X size={12} className="text-gray-400" onClick={() => { if(confirm("消す？")){ const n = categories.filter(x => x !== c); setCategories(n); setDoc(doc(db, "settings", "masters"), { categories: n, locations: locations.filter(l => l !== "なし") }, { merge: true }); } }} /></span>)}</div>
               </div>
               <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
                 <h2 className="text-[10px] font-black mb-3 text-gray-400 uppercase tracking-widest font-sans">保管場所管理</h2>
@@ -192,7 +190,7 @@ export default function WelKatsuApp() {
                   <input value={newLocInput} onChange={e => setNewLocInput(e.target.value)} placeholder="新しい名前..." className="flex-1 w-full bg-gray-100 border-none rounded-xl p-3 font-bold text-sm focus:ring-0 font-sans" />
                   <button onClick={() => { if(newLocInput){ const n = locations.filter(l => l !== "なし").concat(newLocInput); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); setNewLocInput(""); } }} className="w-20 shrink-0 bg-gray-800 text-white rounded-xl font-black text-xs active:scale-95 transition-all font-sans">追加</button>
                 </div>
-                <div className="flex flex-wrap gap-2">{locations.filter(l => l !== "なし").map(l => <span key={l} className="bg-gray-50 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{l} <X size={12} className="text-gray-300" onClick={() => { if(confirm("消す？")){ const n = locations.filter(x => x !== l && x !== "なし"); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); } }} /></span>)}</div>
+                <div className="flex flex-wrap gap-2">{locations.filter(l => l !== "なし").map(l => <span key={l} className="bg-gray-50 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{l} <X size={12} className="text-gray-400" onClick={() => { if(confirm("消す？")){ const n = locations.filter(x => x !== l && x !== "なし"); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); } }} /></span>)}</div>
               </div>
             </div>
           </div>
