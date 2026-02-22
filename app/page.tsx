@@ -10,12 +10,20 @@ import ShoppingList from '@/components/ShoppingList';
 import AddItemModal from '@/components/AddItemModal';
 import { PlusCircle } from 'lucide-react';
 
+interface ShoppingItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  inCart: boolean;
+}
+
 // Firestoreのデータをフェッチするための関数
-const fetcher = (collectionName: string) => {
+const fetcher = (collectionName: string): Promise<ShoppingItem[]> => {
   return new Promise((resolve) => {
     const q = collection(db, collectionName);
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ShoppingItem[];
       resolve(data);
     });
     // SWRがアンマウントされた時にunsubscribeするためのクリーンアップ関数を返す
@@ -25,7 +33,7 @@ const fetcher = (collectionName: string) => {
 
 export default function Home() {
   // Firestoreから買い物リストのデータを取得
-  const { data: shoppingItems, error } = useSWR('shopping-list', fetcher);
+  const { data: shoppingItems, error } = useSWR<ShoppingItem[]>('shopping-list', fetcher);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
