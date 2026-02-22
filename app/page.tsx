@@ -75,30 +75,18 @@ export default function WelKatsuApp() {
     setForm({ ...form, name: "", realName: "" });
   };
 
-  const updateItem = async () => {
-    if (!editingItem) return;
-    await updateDoc(doc(db, "inventory", editingItem.id), { ...form });
-    setEditingItem(null);
-  };
-
-  // 🧮 場所ごとの「買う（赤ボタン）」の数を集計
   const getLocCount = (locName: string) => {
     if (locName === "すべて") return inventory.filter(i => i.isChecking).length;
     return inventory.filter(i => i.isChecking && (i.loc === locName || i.loc2 === locName)).length;
   };
 
-  // 🏠 【在庫確認タブ】のロジック
   const filteredStockList = inventory
     .filter((i: any) => selectedLoc === "すべて" || i.loc === selectedLoc || i.loc2 === selectedLoc)
     .sort((a, b) => {
-      // 1. まず「買う（赤）」を上にする
       if (a.isChecking !== b.isChecking) return b.isChecking ? 1 : -1;
-      // 2. 次に「保管場所にある商品の総数」が多い順に並べる
       const countA = inventory.filter(i => i.loc === a.loc || i.loc2 === a.loc).length;
       const countB = inventory.filter(i => i.loc === b.loc || i.loc2 === b.loc).length;
-      if (countA !== countB) return countB - countA;
-      // 3. 同じなら名前順
-      return a.name.localeCompare(b.name);
+      return countB - countA;
     });
 
   return (
@@ -108,11 +96,11 @@ export default function WelKatsuApp() {
           <div className={`rounded-2xl p-4 shadow-lg text-white transition-all duration-500 ${remaining < 0 ? 'bg-orange-600' : 'bg-gradient-to-br from-[#ff4b4b] to-[#ff7676]'}`}>
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest text-white/90">残金</span>
+                <span className="text-[10px] font-bold opacity-80 uppercase tracking-widest">残金</span>
                 <span className="text-3xl font-black italic tracking-tighter">¥{remaining.toLocaleString()}</span>
               </div>
               <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 flex flex-col items-end border border-white/10">
-                <span className="text-[9px] font-bold opacity-90 mb-1 flex items-center gap-1 font-sans"><Coins size={10} /> 所持ポイント</span>
+                <span className="text-[9px] font-bold opacity-90 mb-1 flex items-center gap-1"><Coins size={10} /> 所持ポイント</span>
                 <input type="number" value={points === 0 ? "" : points} onChange={(e) => { const v = e.target.value === "" ? 0 : Number(e.target.value); setPoints(v); setDoc(doc(db, "settings", "points"), { value: v }); }} className="w-20 bg-transparent border-none p-0 text-right text-lg font-black focus:ring-0 leading-none text-white font-sans" />
               </div>
             </div>
@@ -135,12 +123,14 @@ export default function WelKatsuApp() {
                     <button onClick={() => updateDoc(doc(db, "inventory", item.id), { isPacked: !item.isPacked })} className={`mt-1 transition-colors ${item.isPacked ? 'text-green-500' : 'text-gray-300'}`}><CheckCircle2 size={28} /></button>
                     <div className="flex-1">
                       <div className="flex justify-between items-start gap-2">
-                        <div className={`${item.isPacked ? 'line-through font-bold text-gray-400 font-sans' : 'font-bold text-lg text-gray-800 font-sans'}`}>{item.name}</div>
-                        <span className="shrink-0 text-[9px] font-black bg-gray-100 px-2 py-1 rounded-lg text-gray-500 flex items-center gap-1 font-sans"><MapPin size={8}/>{(item.loc2 && item.loc2 !== "なし") ? `${item.loc} / ${item.loc2}` : item.loc}</span>
+                        <div>
+                          <div className={`${item.isPacked ? 'line-through font-bold text-gray-400 font-sans' : 'font-bold text-lg text-gray-800 font-sans'}`}>{item.name}</div>
+                          <div className="text-[10px] text-gray-400 font-medium font-sans mt-0.5">{item.realName}</div>
+                        </div>
+                        <span className="shrink-0 text-[9px] font-black bg-gray-100 px-2 py-1 rounded-lg text-gray-500 flex items-center gap-1 font-sans"><MapPin size={8}/>{item.loc}</span>
                       </div>
-                      <div className="text-xs text-gray-400 font-medium mb-2 font-sans">{item.realName}</div>
                       {!item.isPacked && (
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mt-3">
                           <DebouncedInput label="個数" value={item.quantity} onChange={(val: any) => updateDoc(doc(db, "inventory", item.id), { quantity: Number(val) })} />
                           <DebouncedInput label="単価(税込)" value={item.price} onChange={(val: any) => updateDoc(doc(db, "inventory", item.id), { price: Number(val) })} />
                         </div>
@@ -160,9 +150,7 @@ export default function WelKatsuApp() {
               <div className="space-y-1">
                 <h1 className="text-xl font-black font-sans">🏠 在庫確認</h1>
                 <button onClick={() => setIsLocModalOpen(true)} className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-all">
-                  <MapPin size={12} className="text-[#ff4b4b]" />
-                  <span className="text-xs font-black text-gray-700 font-sans">{selectedLoc} ({getLocCount(selectedLoc)})</span>
-                  <ChevronDown size={12} className="text-gray-400" />
+                  <MapPin size={12} className="text-[#ff4b4b]" /><span className="text-xs font-black text-gray-700 font-sans">{selectedLoc} ({getLocCount(selectedLoc)})</span><ChevronDown size={12} className="text-gray-400" />
                 </button>
               </div>
               <button onClick={confirmToBuyList} className="bg-[#ff4b4b] text-white text-[10px] font-black px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all font-sans"><Send size={12} /> リストを更新</button>
@@ -173,15 +161,11 @@ export default function WelKatsuApp() {
                   <div className="flex items-center justify-between font-sans">
                     <div>
                       <div className={`font-bold font-sans ${item.isChecking ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{item.name}</div>
-                      <div className="text-[10px] text-gray-400 flex items-center gap-1 font-medium font-sans"><MapPin size={10}/>{(item.loc2 && item.loc2 !== "なし") ? `${item.loc} / ${item.loc2}` : item.loc}</div>
+                      <div className="text-[10px] text-gray-400 font-medium font-sans">{item.realName}</div>
+                      <div className="text-[9px] text-gray-400 flex items-center gap-1 mt-1 font-sans"><MapPin size={10}/>{item.loc}</div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button 
-                        onClick={() => updateDoc(doc(db, "inventory", item.id), { isChecking: !item.isChecking })} 
-                        className={`px-5 py-2 rounded-full text-xs font-black transition-all shadow-sm font-sans ${item.isChecking ? 'bg-[#ff4b4b] text-white' : 'bg-gray-100 text-gray-400 border border-gray-200'}`}
-                      >
-                        {item.isChecking ? '買う' : '在庫あり'}
-                      </button>
+                      <button onClick={() => updateDoc(doc(db, "inventory", item.id), { isChecking: !item.isChecking })} className={`px-5 py-2 rounded-full text-xs font-black transition-all shadow-sm font-sans ${item.isChecking ? 'bg-[#ff4b4b] text-white' : 'bg-gray-100 text-gray-400 border border-gray-200'}`}>{item.isChecking ? '買う' : '在庫あり'}</button>
                       <button onClick={() => { setEditingItem(item); setForm({ name: item.name, realName: item.realName, cat: item.cat, loc: item.loc, loc2: item.loc2 || "なし" }); }} className="text-gray-300 font-sans"><Settings size={20} /></button>
                     </div>
                   </div>
@@ -191,9 +175,8 @@ export default function WelKatsuApp() {
           </div>
         )}
 
-        {/* ...（新規登録、設定、モーダル、ナビ部分は以前と同様）... */}
         {activeTab === 'add' && (
-          <div className="animate-in slide-in-from-bottom duration-300 pt-4"><h1 className="text-xl font-black my-4 font-sans">➕ 新規登録</h1><div className="space-y-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 font-sans"><input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="用品名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold font-sans" /><input value={form.realName} onChange={e => setForm({...form, realName: e.target.value})} placeholder="具体名" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm font-sans" /><div className="grid grid-cols-2 gap-3 text-[10px] font-bold text-gray-400 font-sans"><div className="flex flex-col gap-1 font-sans">カテゴリ<select value={form.cat} onChange={e => setForm({...form, cat: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="flex flex-col gap-1 font-sans">場所1<select value={form.loc} onChange={e => setForm({...form, loc: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.filter(l => l !== "なし").map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="flex flex-col gap-1 text-[10px] font-bold text-gray-400 font-sans">場所2<select value={form.loc2} onChange={e => setForm({...form, loc2: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.map(l => <option key={l} value={l}>{l}</option>)}</select></div><button onClick={addItem} className="w-full bg-[#ff4b4b] text-white font-black py-4 rounded-2xl shadow-lg mt-4 active:scale-95 transition-all font-sans">登録</button></div></div>
+          <div className="animate-in slide-in-from-bottom duration-300 pt-4"><h1 className="text-xl font-black my-4 font-sans">➕ 新規登録</h1><div className="space-y-4 bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 font-sans"><input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="用品名 (例: シャンプー)" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold font-sans" /><input value={form.realName} onChange={e => setForm({...form, realName: e.target.value})} placeholder="具体名 (例: パンテーン詰め替え)" className="w-full bg-gray-50 border-none rounded-xl p-3 font-bold text-sm font-sans" /><div className="grid grid-cols-2 gap-3 text-[10px] font-bold text-gray-400 font-sans"><div className="flex flex-col gap-1 font-sans">カテゴリ<select value={form.cat} onChange={e => setForm({...form, cat: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="flex flex-col gap-1 font-sans">場所1<select value={form.loc} onChange={e => setForm({...form, loc: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.filter(l => l !== "なし").map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="flex flex-col gap-1 text-[10px] font-bold text-gray-400 font-sans">場所2<select value={form.loc2} onChange={e => setForm({...form, loc2: e.target.value})} className="bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.map(l => <option key={l} value={l}>{l}</option>)}</select></div><button onClick={addItem} className="w-full bg-[#ff4b4b] text-white font-black py-4 rounded-2xl shadow-lg mt-4 active:scale-95 transition-all font-sans">登録</button></div></div>
         )}
 
         {activeTab === 'settings' && (
@@ -202,8 +185,8 @@ export default function WelKatsuApp() {
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm font-sans">
                 <h2 className="text-[10px] font-black mb-3 text-gray-400 uppercase tracking-widest font-sans">カテゴリ管理</h2>
-                <div className="flex w-full gap-2 mb-4 font-sans">
-                  <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} placeholder="新しい名前..." className="flex-1 w-full bg-gray-100 border-none rounded-xl p-3 font-bold text-sm focus:ring-0 font-sans" />
+                <div className="flex w-full gap-2 mb-4">
+                  <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} placeholder="名前..." className="flex-1 w-full bg-gray-100 border-none rounded-xl p-3 font-bold text-sm focus:ring-0 font-sans" />
                   <button onClick={() => { if(newCatInput){ const n = [...categories, newCatInput]; setCategories(n); setDoc(doc(db, "settings", "masters"), { categories: n, locations: locations.filter(l => l !== "なし") }, { merge: true }); setNewCatInput(""); } }} className="w-20 shrink-0 bg-gray-800 text-white rounded-xl font-black text-xs active:scale-95 transition-all font-sans">追加</button>
                 </div>
                 <div className="flex flex-wrap gap-2 font-sans">{categories.map(c => <span key={c} className="bg-gray-50 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{c} <X size={12} className="text-gray-400" onClick={() => { if(confirm("消す？")){ const n = categories.filter(x => x !== c); setCategories(n); setDoc(doc(db, "settings", "masters"), { categories: n, locations: locations.filter(l => l !== "なし") }, { merge: true }); } }} /></span>)}</div>
@@ -211,7 +194,7 @@ export default function WelKatsuApp() {
               <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm font-sans">
                 <h2 className="text-[10px] font-black mb-3 text-gray-400 uppercase tracking-widest font-sans">保管場所管理</h2>
                 <div className="flex w-full gap-2 mb-4 font-sans">
-                  <input value={newLocInput} onChange={e => setNewLocInput(e.target.value)} placeholder="新しい名前..." className="flex-1 w-full bg-gray-100 border-none rounded-xl p-3 font-bold text-sm focus:ring-0 font-sans" />
+                  <input value={newLocInput} onChange={e => setNewLocInput(e.target.value)} placeholder="名前..." className="flex-1 w-full bg-gray-100 border-none rounded-xl p-3 font-bold text-sm focus:ring-0 font-sans" />
                   <button onClick={() => { if(newLocInput){ const n = locations.filter(l => l !== "なし").concat(newLocInput); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); setNewLocInput(""); } }} className="w-20 shrink-0 bg-gray-800 text-white rounded-xl font-black text-xs active:scale-95 transition-all font-sans">追加</button>
                 </div>
                 <div className="flex flex-wrap gap-2 font-sans">{locations.filter(l => l !== "なし").map(l => <span key={l} className="bg-gray-50 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 text-gray-600 border border-gray-100 font-sans">{l} <X size={12} className="text-gray-400" onClick={() => { if(confirm("消す？")){ const n = locations.filter(x => x !== l && x !== "なし"); setLocations([...n, "なし"]); setDoc(doc(db, "settings", "masters"), { categories, locations: n }, { merge: true }); } }} /></span>)}</div>
@@ -221,36 +204,26 @@ export default function WelKatsuApp() {
         )}
       </main>
 
-      {/* --- 📍 場所選択モーダル (件数表示アップデート) --- */}
       {isLocModalOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-md flex flex-col justify-end font-sans">
+        <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-md flex flex-col justify-end">
           <div className="bg-white rounded-t-[40px] max-h-[85vh] overflow-y-auto p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-black">場所で絞り込む</h2>
-              <button onClick={() => setIsLocModalOpen(false)} className="bg-gray-100 p-2 rounded-full"><X size={20}/></button>
+              <h2 className="text-xl font-black font-sans">場所で絞り込む</h2>
+              <button onClick={() => setIsLocModalOpen(false)} className="bg-gray-100 p-2 rounded-full font-sans"><X size={20}/></button>
             </div>
             <div className="grid grid-cols-1 gap-3 pb-10">
-              {["すべて", ...locations.filter(l => l !== "なし")].map(loc => {
-                const count = getLocCount(loc);
-                return (
-                  <button 
-                    key={loc} 
-                    onClick={() => { setSelectedLoc(loc); setIsLocModalOpen(false); }} 
-                    className={`w-full text-left p-5 rounded-2xl font-black transition-all flex justify-between items-center ${selectedLoc === loc ? 'bg-[#ff4b4b] text-white shadow-lg' : 'bg-gray-50 text-gray-700 active:bg-gray-100'}`}
-                  >
-                    <span>{loc}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${selectedLoc === loc ? 'bg-white/20' : 'bg-gray-200 text-gray-500'}`}>{count}</span>
-                  </button>
-                );
-              })}
+              {["すべて", ...locations.filter(l => l !== "なし")].map(loc => (
+                <button key={loc} onClick={() => { setSelectedLoc(loc); setIsLocModalOpen(false); }} className={`w-full text-left p-5 rounded-2xl font-black transition-all flex justify-between items-center font-sans ${selectedLoc === loc ? 'bg-[#ff4b4b] text-white shadow-lg' : 'bg-gray-50 text-gray-700 active:bg-gray-100'}`}>
+                  <span>{loc}</span><span className={`text-xs px-2 py-1 rounded-full ${selectedLoc === loc ? 'bg-white/20' : 'bg-gray-200 text-gray-500'}`}>{getLocCount(loc)}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* ... (編集モーダル、ナビは以前と同様) ... */}
       {editingItem && (
-        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md flex items-center justify-center p-6"><div className="bg-white w-full max-w-sm rounded-[40px] p-8 shadow-2xl space-y-5 animate-in zoom-in-95 font-sans"><div className="flex justify-between items-center font-sans"><h2 className="text-xl font-black flex items-center gap-2 font-sans"><Edit2 size={20} className="text-[#ff4b4b]"/> 編集</h2><button onClick={() => setEditingItem(null)} className="text-gray-300 bg-gray-100 p-2 rounded-full font-sans"><X size={20}/></button></div><div className="space-y-4 font-sans"><input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold font-sans" placeholder="用品名" /><input value={form.realName} onChange={e => setForm({...form, realName: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm font-sans" placeholder="具体名" /><div className="grid grid-cols-2 gap-4 font-sans"><div className="space-y-1 font-sans font-bold text-gray-400 text-[10px]">Cat<select value={form.cat} onChange={e => setForm({...form, cat: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="space-y-1 font-sans font-bold text-gray-400 text-[10px]">Loc1<select value={form.loc} onChange={e => setForm({...form, loc: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.filter(l => l !== "なし").map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="space-y-1 font-sans font-bold text-gray-400 text-[10px]">Loc2<select value={form.loc2} onChange={e => setForm({...form, loc2: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="pt-4 space-y-3 font-sans font-bold text-gray-400 text-[10px] font-sans"><button onClick={updateItem} className="w-full bg-gray-900 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all font-sans text-sm">保存</button><button onClick={() => { if(confirm("消す？")) { deleteDoc(doc(db, "inventory", editingItem.id)); setEditingItem(null); } }} className="w-full text-red-400 font-bold py-2 text-xs flex items-center justify-center gap-1 opacity-50 font-sans"><Trash2 size={14}/> 削除</button></div></div></div>
+        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md flex items-center justify-center p-6"><div className="bg-white w-full max-w-sm rounded-[40px] p-8 shadow-2xl space-y-5 animate-in zoom-in-95 font-sans"><div className="flex justify-between items-center font-sans"><h2 className="text-xl font-black flex items-center gap-2 font-sans"><Edit2 size={20} className="text-[#ff4b4b]"/> 編集</h2><button onClick={() => setEditingItem(null)} className="text-gray-300 bg-gray-100 p-2 rounded-full font-sans"><X size={20}/></button></div><div className="space-y-4 font-sans"><input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold font-sans" placeholder="用品名" /><input value={form.realName} onChange={e => setForm({...form, realName: e.target.value})} className="w-full bg-gray-50 border-none rounded-2xl p-4 font-bold text-sm font-sans" placeholder="具体名" /><div className="grid grid-cols-2 gap-4 font-sans"><div className="space-y-1 font-sans font-bold text-gray-400 text-[10px]">Cat<select value={form.cat} onChange={e => setForm({...form, cat: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{categories.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="space-y-1 font-sans font-bold text-gray-400 text-[10px]">Loc1<select value={form.loc} onChange={e => setForm({...form, loc: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.filter(l => l !== "なし").map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="space-y-1 font-sans font-bold text-gray-400 text-[10px]">Loc2<select value={form.loc2} onChange={e => setForm({...form, loc2: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-800 font-sans">{locations.map(l => <option key={l} value={l}>{l}</option>)}</select></div></div><div className="pt-4 space-y-3 font-sans font-bold text-gray-400 text-[10px] font-sans"><button onClick={() => {updateDoc(doc(db,"inventory",editingItem.id),form);setEditingItem(null);}} className="w-full bg-gray-900 text-white font-black py-4 rounded-2xl shadow-lg font-sans">保存</button><button onClick={() => {deleteDoc(doc(db,"inventory",editingItem.id));setEditingItem(null);}} className="w-full text-red-400 font-bold py-2 text-xs flex items-center justify-center gap-1 opacity-50 font-sans"><Trash2 size={14}/> 削除</button></div></div></div>
       )}
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 rounded-t-[32px] shadow-[0_-5px_20px_rgba(0,0,0,0.03)] font-sans">
