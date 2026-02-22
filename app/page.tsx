@@ -27,6 +27,7 @@ export default function WelKatsuApp() {
   const [isLocModalOpen, setIsLocModalOpen] = useState(false);
   const [form, setForm] = useState({ name: "", realName: "", cat: "キッチン", loc: "パントリー", loc2: "なし" });
   const [editingItem, setEditingItem] = useState<any>(null);
+
   const [newCatInput, setNewCatInput] = useState("");
   const [newLocInput, setNewLocInput] = useState("");
 
@@ -85,6 +86,7 @@ export default function WelKatsuApp() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24 font-sans text-slate-800 tracking-tight">
+      
       {activeTab === 'shop' && (
         <div className="sticky top-0 z-50 bg-[#f8f9fa]/80 backdrop-blur-md px-4 py-3 border-b border-gray-200">
           <div className={`rounded-2xl p-4 shadow-lg text-white transition-all duration-500 ${remaining < 0 ? 'bg-orange-600' : 'bg-gradient-to-br from-[#ff4b4b] to-[#ff7676]'}`}>
@@ -94,7 +96,7 @@ export default function WelKatsuApp() {
                 <span className="text-3xl font-black italic tracking-tighter">¥{remaining.toLocaleString()}</span>
               </div>
               <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 flex flex-col items-end border border-white/10">
-                <span className="text-[9px] font-bold opacity-90 mb-1 flex items-center gap-1"><Coins size(10) /> 所持ポイント</span>
+                <span className="text-[9px] font-bold opacity-90 mb-1 flex items-center gap-1"><Coins size={10} /> 所持ポイント</span>
                 <input type="number" value={points === 0 ? "" : points} onChange={(e) => { const v = e.target.value === "" ? 0 : Number(e.target.value); setPoints(v); setDoc(doc(db, "settings", "points"), { value: v }); }} className="w-20 bg-transparent border-none p-0 text-right text-lg font-black focus:ring-0 leading-none text-white font-sans" />
               </div>
             </div>
@@ -200,7 +202,7 @@ export default function WelKatsuApp() {
       {isLocModalOpen && (
         <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-md animate-in fade-in duration-300 flex flex-col justify-end">
           <div className="bg-white rounded-t-[40px] max-h-[85vh] overflow-y-auto p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl">
-            <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-black font-sans">場所で絞り込む</h2><button onClick={() => setIsLocModalOpen(false)} className="bg-gray-100 p-2 rounded-full font-sans"><X size={20}/></button></div>
+            <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-black font-sans text-sans">場所で絞り込む</h2><button onClick={() => setIsLocModalOpen(false)} className="bg-gray-100 p-2 rounded-full font-sans"><X size={20}/></button></div>
             <div className="grid grid-cols-1 gap-3 pb-10">{["すべて", ...locations.filter(l => l !== "なし")].map(loc => (
               <button key={loc} onClick={() => { setSelectedLoc(loc); setIsLocModalOpen(false); }} className={`w-full text-left p-5 rounded-2xl font-black transition-all font-sans ${selectedLoc === loc ? 'bg-[#ff4b4b] text-white shadow-lg scale-105' : 'bg-gray-50 text-gray-700 active:bg-gray-100'}`}>{loc}</button>
             ))}</div>
