@@ -5,8 +5,8 @@ import "./globals.css";
 const noto = Noto_Sans_JP({ subsets: ["latin"], weight: ["400", "700", "900"] });
 
 export const metadata: Metadata = {
-  title: "ウェル活マスター Pro",
-  description: "ウェル活専用の予算管理・在庫チェックアプリ",
+  title: "星家在庫管理",
+  description: "星家の在庫をスマートに管理するアプリ",
 };
 
 export default function RootLayout({

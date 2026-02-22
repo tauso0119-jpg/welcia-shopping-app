@@ -69,7 +69,7 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-slate-50">
       <header className="p-4 bg-gradient-to-r from-red-500 to-welcia shadow-lg">
         <h1 className="text-2xl font-black text-center text-white tracking-wider">
-          ウェル活マスター Pro
+          星家在庫管理
         </h1>
       </header>
 
